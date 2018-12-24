@@ -91,8 +91,7 @@ select @cred_level_1 as cred_level_1;
 -- WHILE
 delimiter $$
 create function sum_while(buttom INT,top INT)
-returns INT 
-DETERMINISTIC
+returns INT NO SQL
 BEGIN
 	declare temp int;-- 变量必须在最前面声明
 	declare sum int default 0;
@@ -171,4 +170,18 @@ select sum_repeat(1,100);
 select sum_repeat(101,100);
 
 
--- 
+-- 查看函数（存储过程）状态和定义
+show function status like 'sum_while';
+show create function sum_while;
+show procedure status LIKE 'dept_count_pro';
+show create procedure dept_count_pro;
+
+select * from information_schema.Routines;
+
+-- 修改函数和存储过程
+-- 语法: ALTER {PROCEDURE|FUNCTION} sp_name [characteristic...]
+-- 注意：函数和存储过程的代码在定义之后不能修改（只能先删除再新建）
+alter function sum_while LANGUAGE SQL NO SQL SQL SECURITY INVOKER;
+
+-- 删除函数和存储过程
+drop function if exists sum_while;
