@@ -1,0 +1,174 @@
+
+-- 创建函数：计算某一个系的教师人数
+DELIMITER $$
+CREATE FUNCTION dept_count(dept_name VARCHAR(20)) 
+RETURNS VARCHAR(20) 
+READS SQL DATA -- 子程序需要被声明为确定性的或者不更改数据，否则：ERROR 1418 (HY000)
+BEGIN
+	DECLARE d_count int;
+	SELECT COUNT(id) into d_count FROM instructor where instructor.dept_name=dept_name;
+	return d_count;
+END$$
+DELIMITER ;
+
+-- 创建表函数（此特性最早出现在SQL 2003） 不支持
+/*
+DELIMITER $$
+create FUNCTION instructor_of(dept_name VARCHAR(20))
+returns TABLE( ID VARCHAR(5),
+							 name varchar(20),
+							 dept_name VARCHAR(20),
+							 salary NUMERIC(8,2))
+READS SQL DATA
+begin 
+	return table(select ID,name,dept_name,salary from instructor where instructor.dept_name=dept_name);
+end $$;
+DELIMITER ;
+*/
+
+
+-- 创建存储过程：计算某一个系的教师人数
+delimiter $$
+create PROCEDURE dept_count_pro(in dept_name varchar(20),out d_count INT)
+begin 
+		select count(*) into d_count from instructor where instructor.dept_name=dept_name;
+end $$
+delimiter ;
+
+ 
+call dept_count_pro('Physics',@d_count);
+select @d_count as d_count;
+
+select dept_count('Physics') as dept_count;
+
+-- if_else
+delimiter $$
+create PROCEDURE get_stu_level_if(in stu_ID varchar(5),out cred_level varchar(5))
+begin 
+	declare cred decimal(5,0);
+	select tot_cred into cred from student where ID=stu_ID;
+	if cred >=100 THEN 
+			set cred_level='非常好';
+	elseif cred>=80 THEN
+			set cred_level='好';
+	elseif cred>=50 THEN 
+			set cred_level='良';
+	else 
+			set cred_level='差';
+	end IF;
+end $$
+delimiter ;
+
+call get_stu_level_if('19991',@cred_level);
+select @cred_level as cred_level;
+
+
+-- case
+delimiter $$
+create PROCEDURE get_stu_level_case(in stu_ID varchar(5),out cred_level varchar(5))
+begin 
+	declare cred decimal(5,0);
+	select tot_cred into cred from student where ID=stu_ID;
+	case 
+		when cred>=100 then 
+			SET cred_level='非常好';
+		when cred>=80 then
+			SET cred_level='好';
+		when cred>=50 then
+			SET cred_level='良';
+		ELSE
+			SET cred_level='差';
+	END CASE;
+end $$
+delimiter ;
+
+call get_stu_level_case('19991',@cred_level_1);
+select @cred_level_1 as cred_level_1;
+
+
+-- LEAVE can be used within BEGIN ... END or loop constructs (LOOP, REPEAT, WHILE).
+-- ITERATE can appear only within LOOP, REPEAT, and WHILE statements. ITERATE means “start the loop again.”
+-- WHILE
+delimiter $$
+create function sum_while(buttom INT,top INT)
+returns INT 
+DETERMINISTIC
+BEGIN
+	declare temp int;-- 变量必须在最前面声明
+	declare sum int default 0;
+	declare i int;
+	IF buttom>top THEN
+		set temp=buttom;
+		set buttom=top;
+		set top=temp;
+	END IF;
+	set i=buttom;
+	WHILE i<=top DO
+		set sum=sum+i;
+		set i=i+1;
+	END WHILE;
+	return sum;
+END $$
+delimiter ;
+
+select sum_while(1,100);
+select sum_while(101,100);
+
+-- LOOP
+delimiter $$
+create function sum_loop(buttom int,top INT)
+returns INT 
+LANGUAGE SQL DETERMINISTIC NO SQL SQL SECURITY INVOKER
+BEGIN
+	declare temp INT;
+	declare sum int default 0;
+	declare i int;
+	IF buttom>top THEN
+		set temp=buttom;
+		set buttom=top;
+		set top=temp;
+	END IF;
+	set i=buttom;
+	sum_label:LOOP
+		IF i>top THEN 
+			LEAVE sum_label; 
+		END IF;
+		set sum=sum+i;
+		set i=i+1;
+	END LOOP sum_label;
+	return sum;
+END $$
+delimiter ;
+
+select sum_loop(1,100);
+select sum_loop(101,100);
+
+-- REPEAT
+delimiter $$
+create function sum_repeat(buttom int,top INT)
+returns INT
+LANGUAGE SQL DETERMINISTIC NO SQL SQL SECURITY INVOKER
+BEGIN
+	declare temp INT;
+	declare i INT;
+	declare sum int DEFAULT 0;
+	IF buttom>top THEN
+		set temp=top;
+		set top=buttom;
+		set buttom=temp;
+	END IF;
+	set i=buttom;
+	sum_label:REPEAT
+		set sum=sum+i;
+		set i=i+1;
+	UNTIL i>top
+	END REPEAT sum_label;
+	return sum;
+END $$
+delimiter ;
+
+select sum_repeat(1,100);
+select sum_repeat(101,100);
+
+
+-- 
