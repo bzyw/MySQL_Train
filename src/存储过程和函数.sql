@@ -181,6 +181,7 @@ select * from information_schema.Routines;
 -- 修改函数和存储过程
 -- 语法: ALTER {PROCEDURE|FUNCTION} sp_name [characteristic...]
 -- 注意：函数和存储过程的代码在定义之后不能修改（只能先删除再新建）
+-- 注意：不能修改[NOT] DETERMINISTIC特性，因为函数或存储过程内容不能修改，而内容决定了是否是确定的
 alter function sum_while LANGUAGE SQL NO SQL SQL SECURITY INVOKER;
 
 -- 删除函数和存储过程
