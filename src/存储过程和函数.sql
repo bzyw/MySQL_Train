@@ -186,3 +186,31 @@ alter function sum_while LANGUAGE SQL NO SQL SQL SECURITY INVOKER;
 
 -- 删除函数和存储过程
 drop function if exists sum_while;
+
+
+
+-- 游标的使用
+delimiter $$
+create procedure cursor_test(in top_budget DECIMAL(12),out count INT)
+begin 
+	declare temp_budget DECIMAL;
+	declare no_more_record int default 0;
+	declare dept_cursor CURSOR for select budget from department;
+	DECLARE CONTINUE HANDLER for NOT FOUND SET no_more_record=1;
+	
+	set count=0;
+	open dept_cursor;
+	count_loop:LOOP
+			FETCH dept_cursor INTO temp_budget;	
+			IF no_more_record=1 THEN
+				LEAVE count_loop;
+			ELSEIF temp_budget<=top_budget THEN
+				set count=count+1;
+			END IF;
+	END LOOP count_loop;
+	close dept_cursor;
+END $$
+delimiter ;
+
+CALL cursor_test(90000,@d_count);
+select @d_count;
