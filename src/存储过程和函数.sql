@@ -201,6 +201,7 @@ begin
 	set count=0;
 	open dept_cursor;
 	count_loop:LOOP
+			--取多个字段  FETCH  NEXT from cur_account INTO phone1,password1,name1; 
 			FETCH dept_cursor INTO temp_budget;	
 			IF no_more_record=1 THEN
 				LEAVE count_loop;
